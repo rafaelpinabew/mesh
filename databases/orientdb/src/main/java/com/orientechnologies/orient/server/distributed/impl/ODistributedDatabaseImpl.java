@@ -19,6 +19,29 @@
  */
 package com.orientechnologies.orient.server.distributed.impl;
 
+import static com.orientechnologies.orient.core.config.OGlobalConfiguration.DISTRIBUTED_ATOMIC_LOCK_TIMEOUT;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.orientechnologies.common.concur.OOfflineNodeException;
 import com.orientechnologies.common.concur.lock.OSimpleLockManager;
 import com.orientechnologies.common.concur.lock.OSimpleLockManagerImpl;
@@ -58,31 +81,10 @@ import com.orientechnologies.orient.server.distributed.OModifiableDistributedCon
 import com.orientechnologies.orient.server.distributed.ORemoteServerController;
 import com.orientechnologies.orient.server.distributed.impl.task.ODistributedLockTask;
 import com.orientechnologies.orient.server.distributed.impl.task.OUnreachableServerLocalTask;
-import com.orientechnologies.orient.server.distributed.impl.task.OWaitForTask;
 import com.orientechnologies.orient.server.distributed.task.OAbstractRemoteTask;
-import com.orientechnologies.orient.server.distributed.task.ODistributedOperationException;
 import com.orientechnologies.orient.server.distributed.task.ODistributedRecordLockedException;
 import com.orientechnologies.orient.server.distributed.task.ORemoteTask;
 import com.orientechnologies.orient.server.hazelcast.OHazelcastPlugin;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimerTask;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.orientechnologies.orient.core.config.OGlobalConfiguration.DISTRIBUTED_ATOMIC_LOCK_TIMEOUT;
 
 /**
  * Distributed database implementation. There is one instance per database. Each node creates own instance to talk with each
