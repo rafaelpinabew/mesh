@@ -32,10 +32,11 @@ public interface BinaryFieldTestHelper {
 		Buffer buffer = Buffer.buffer(FILECONTENTS);
 		String sha512Sum = FileUtils.hash(buffer).blockingGet();
 		Binary binary = mesh.boot().binaryRoot().create(sha512Sum, Long.valueOf(buffer.length()));
+		long size = Long.valueOf(buffer.length());
 
 		String tmpId = UUIDUtil.randomUUID();
 		BinaryStorage storage = mesh.binaryStorage();
-		storage.storeInTemp(Flowable.just(buffer), tmpId).blockingAwait();
+		storage.storeInTemp(Flowable.just(buffer), size, tmpId).blockingAwait();
 		storage.moveInPlace(binary.getUuid(), tmpId).blockingAwait();
 
 		BinaryGraphField field = container.createBinary(name, binary);
