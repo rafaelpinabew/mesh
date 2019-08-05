@@ -12,6 +12,8 @@ import com.gentics.mesh.core.rest.schema.FieldSchemaContainer;
 import com.gentics.mesh.core.rest.schema.Schema;
 import com.gentics.mesh.core.rest.schema.impl.SchemaReferenceImpl;
 
+import io.vertx.core.json.JsonObject;
+
 /**
  * Common graph model interface for schema field containers.
  * 
@@ -79,4 +81,7 @@ public interface GraphFieldSchemaContainer<R extends FieldSchemaContainer, RE ex
 	 */
 	Map<Branch, VV> findReferencedBranches();
 
+	JsonObject getMetaData();
+
+	void setMetaData(JsonObject metaData);
 }

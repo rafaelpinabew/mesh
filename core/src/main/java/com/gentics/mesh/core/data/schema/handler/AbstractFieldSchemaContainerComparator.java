@@ -128,6 +128,9 @@ public abstract class AbstractFieldSchemaContainerComparator<FC extends FieldSch
 		// Compare the description
 		compareAndAddSchemaProperty(changes, SchemaChangeModel.DESCRIPTION_KEY, containerA.getDescription(), containerB.getDescription(), classOfFC);
 
+		// Compare the meta data
+		compareAndAddSchemaProperty(changes, SchemaChangeModel.META_KEY, containerA.getMeta(), containerB.getMeta(), classOfFC);
+
 		return changes;
 	}
 

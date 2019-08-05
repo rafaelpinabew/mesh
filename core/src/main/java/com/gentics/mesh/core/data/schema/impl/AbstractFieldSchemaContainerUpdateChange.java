@@ -30,6 +30,16 @@ public abstract class AbstractFieldSchemaContainerUpdateChange<T extends FieldSc
 	}
 
 	@Override
+	public JsonObject getMeta() {
+		return new JsonObject(this.<String>getRestProperty(SchemaChangeModel.META_KEY));
+	}
+
+	@Override
+	public void setMeta(JsonObject metaData) {
+		setRestProperty(SchemaChangeModel.META_KEY, metaData);
+	}
+
+	@Override
 	public String getDescription() {
 		return getRestProperty(SchemaChangeModel.DESCRIPTION_KEY);
 	}
@@ -73,6 +83,12 @@ public abstract class AbstractFieldSchemaContainerUpdateChange<T extends FieldSc
 		JsonObject options = getIndexOptions();
 		if (options != null) {
 			container.setElasticsearch(options);
+		}
+
+		// .meta
+		JsonObject meta = getMeta();
+		if (meta != null) {
+			container.setMeta(meta);
 		}
 
 		// Update the fields if the order changes

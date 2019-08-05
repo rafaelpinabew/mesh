@@ -49,6 +49,8 @@ public class SchemaChangeModel implements RestModel {
 
 	public static final String CONTAINER_FLAG_KEY = "container";
 
+	public static final String META_KEY = "meta";
+
 	@JsonPropertyDescription("Uuid of the change entry")
 	private String uuid;
 

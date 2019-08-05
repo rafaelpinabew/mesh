@@ -29,6 +29,10 @@ public class SchemaCreateRequest implements Schema {
 	private Boolean container = false;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Meta data of the schema")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("Description of the schema")
 	private String description;
 
@@ -47,6 +51,17 @@ public class SchemaCreateRequest implements Schema {
 	@JsonProperty(required = false)
 	@JsonPropertyDescription("Auto purge flag of the schema. Controls whether contents of this schema should create new versions.")
 	private Boolean autoPurge;
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public SchemaCreateRequest setMeta(JsonObject meta) {
+		this.meta = meta;
+		return this;
+	}
 
 	@Override
 	public String getDescription() {

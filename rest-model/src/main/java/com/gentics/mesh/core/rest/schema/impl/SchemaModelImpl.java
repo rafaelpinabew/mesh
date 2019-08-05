@@ -30,6 +30,10 @@ public class SchemaModelImpl implements SchemaModel {
 	private Boolean container;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Description of the schema")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("Additional elasticsearch index configuration. This can be used to setup custom analyzers and filters.")
 	private JsonObject elasticsearch;
 
@@ -77,6 +81,17 @@ public class SchemaModelImpl implements SchemaModel {
 	@Override
 	public SchemaModelImpl setVersion(String version) {
 		this.version = version;
+		return this;
+	}
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public SchemaModelImpl setMeta(JsonObject meta) {
+		this.meta = meta;
 		return this;
 	}
 

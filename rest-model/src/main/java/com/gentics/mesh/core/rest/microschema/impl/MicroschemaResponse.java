@@ -34,6 +34,10 @@ public class MicroschemaResponse extends AbstractGenericRestResponse implements 
 	private String name;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Meta data of the schema.")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("Additional search index configuration. This can be used to setup custom analyzers and filters.")
 	private JsonObject elasticsearch;
 
@@ -80,6 +84,17 @@ public class MicroschemaResponse extends AbstractGenericRestResponse implements 
 	@Override
 	public MicroschemaResponse setName(String name) {
 		this.name = name;
+		return this;
+	}
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public MicroschemaResponse setMeta(JsonObject meta) {
+		this.meta = meta;
 		return this;
 	}
 

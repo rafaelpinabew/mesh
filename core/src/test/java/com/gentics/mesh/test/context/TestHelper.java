@@ -560,6 +560,13 @@ public interface TestHelper {
 			.blockingFirst();
 	}
 
+	default MicroschemaResponse getMicroschemaByName(String name) {
+		return client().findMicroschemas().toSingle()
+			.to(com.gentics.mesh.test.util.TestUtils::listObservable)
+			.filter(schema -> schema.getName().equals(name))
+			.blockingFirst();
+	}
+
 	default public Schema readSchema(String uuid) {
 		return call(() -> client().findSchemaByUuid(uuid));
 	}

@@ -65,7 +65,7 @@ public class UpdateFieldChangeImpl extends AbstractSchemaFieldChange implements 
 	
 	@Override
 	public void updateFromRest(SchemaChangeModel restChange) {
-		/***
+		/*
 		 * Many graph databases can't handle null values. Tinkerpop blueprint contains constrains which avoid setting null values. We store empty string for the
 		 * segment field name instead. It is possible to set setStandardElementConstraints for each tx to false in order to avoid such checks.
 		 */

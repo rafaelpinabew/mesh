@@ -34,6 +34,10 @@ public class SchemaUpdateRequest implements SchemaModel {
 	private String version;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Meta data of the schema.")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("New description of the schema.")
 	private String description;
 
@@ -61,6 +65,17 @@ public class SchemaUpdateRequest implements SchemaModel {
 	@Override
 	public SchemaUpdateRequest setName(String name) {
 		this.name = name;
+		return this;
+	}
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public SchemaUpdateRequest setMeta(JsonObject meta) {
+		this.meta = meta;
 		return this;
 	}
 

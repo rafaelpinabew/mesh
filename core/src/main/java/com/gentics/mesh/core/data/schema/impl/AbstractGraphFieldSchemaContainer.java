@@ -23,6 +23,7 @@ import com.gentics.mesh.event.EventQueueBatch;
 import com.gentics.mesh.util.ETag;
 
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 /**
  * The {@link AbstractGraphFieldSchemaContainer} contains the abstract graph element implementation for {@link GraphFieldSchemaContainer} implementations (e.g.:
@@ -149,4 +150,13 @@ public abstract class AbstractGraphFieldSchemaContainer<R extends FieldSchemaCon
 		return references;
 	}
 
+	@Override
+	public JsonObject getMetaData() {
+		return new JsonObject(this.<String>property("meta"));
+	}
+
+	@Override
+	public void setMetaData(JsonObject metaData) {
+		property("meta", metaData.encode());
+	}
 }

@@ -47,6 +47,7 @@ import com.gentics.mesh.core.rest.schema.impl.MicroschemaReferenceImpl;
 import com.gentics.mesh.core.rest.schema.impl.SchemaCreateRequest;
 import com.gentics.mesh.core.rest.schema.impl.SchemaReferenceImpl;
 import com.gentics.mesh.core.rest.schema.impl.SchemaResponse;
+import com.gentics.mesh.core.rest.schema.impl.SchemaUpdateRequest;
 import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.parameter.impl.RolePermissionParametersImpl;
 import com.gentics.mesh.parameter.impl.VersioningParametersImpl;
@@ -56,6 +57,7 @@ import com.gentics.mesh.test.definition.BasicRestTestcases;
 import com.gentics.mesh.util.UUIDUtil;
 
 import io.reactivex.Observable;
+import io.vertx.core.json.JsonObject;
 
 @MeshTestSetting(elasticsearch = TRACKING, testSize = FULL, startServer = true)
 public class MicroschemaEndpointTest extends AbstractMeshTest implements BasicRestTestcases {
@@ -498,5 +500,16 @@ public class MicroschemaEndpointTest extends AbstractMeshTest implements BasicRe
 
 		client().createSchema(schemaRequest).blockingAwait();
 		call(() -> client().createMicroschema(microSchemaRequest), CONFLICT, "schema_conflicting_name", "test");
+	}
+
+	@Test
+	public void testMetaData() {
+		SchemaResponse schema = getSchemaByName("folder");
+		SchemaUpdateRequest request = schema.toUpdateRequest();
+		request.setMeta(new JsonObject().put("meshui", "test"));
+		client().updateSchema(schema.getUuid(), request).blockingGet();
+		SchemaResponse updatedSchema = client().findSchemaByUuid(schema.getUuid()).blockingGet();
+
+		assertThat(updatedSchema.getMeta().getString("meshui")).isEqualTo("test");
 	}
 }

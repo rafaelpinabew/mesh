@@ -43,6 +43,10 @@ public class SchemaResponse extends AbstractGenericRestResponse implements Schem
 	private String name;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Meta data of the schema.")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("Additional search index configuration. This can be used to setup custom analyzers and filters.")
 	private JsonObject elasticsearch;
 
@@ -62,6 +66,17 @@ public class SchemaResponse extends AbstractGenericRestResponse implements Schem
 	@Override
 	public SchemaResponse setName(String name) {
 		this.name = name;
+		return this;
+	}
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public SchemaResponse setMeta(JsonObject meta) {
+		this.meta = meta;
 		return this;
 	}
 
@@ -166,6 +181,7 @@ public class SchemaResponse extends AbstractGenericRestResponse implements Schem
 		updateRequest.setDescription(getDescription());
 		updateRequest.setElasticsearch(getElasticsearch());
 		updateRequest.setUrlFields(getUrlFields());
+		updateRequest.setMeta(getMeta());
 		return updateRequest;
 	}
 

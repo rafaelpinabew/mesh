@@ -41,6 +41,10 @@ public interface FieldSchemaContainer extends RestModel {
 	 */
 	FieldSchemaContainer setName(String name);
 
+	JsonObject getMeta();
+
+	FieldSchemaContainer setMeta(JsonObject metaData);
+
 	/**
 	 * Return the container description.
 	 * 

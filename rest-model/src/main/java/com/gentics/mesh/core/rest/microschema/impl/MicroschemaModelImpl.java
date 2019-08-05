@@ -29,6 +29,10 @@ public class MicroschemaModelImpl implements MicroschemaModel {
 	private String name;
 
 	@JsonProperty(required = false)
+	@JsonPropertyDescription("Meta data of the schema.")
+	private JsonObject meta;
+
+	@JsonProperty(required = false)
 	@JsonPropertyDescription("Additional elasticsearch index configuration. This can be used to setup custom analyzers and filters.")
 	private JsonObject elasticsearch;
 
@@ -66,6 +70,17 @@ public class MicroschemaModelImpl implements MicroschemaModel {
 	@Override
 	public MicroschemaModel setName(String name) {
 		this.name = name;
+		return this;
+	}
+
+	@Override
+	public JsonObject getMeta() {
+		return meta;
+	}
+
+	@Override
+	public MicroschemaModelImpl setMeta(JsonObject meta) {
+		this.meta = meta;
 		return this;
 	}
 

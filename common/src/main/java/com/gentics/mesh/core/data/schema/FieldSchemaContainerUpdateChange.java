@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.gentics.mesh.core.rest.schema.FieldSchemaContainer;
 
+import io.vertx.core.json.JsonObject;
+
 /**
  * Common interface for multiple field container update changes (e.g.: {@link UpdateSchemaChange}, {@link UpdateMicroschemaChange})
  * 
@@ -54,4 +56,8 @@ public interface FieldSchemaContainerUpdateChange<T extends FieldSchemaContainer
 	 * @param name
 	 */
 	void setName(String name);
+
+	JsonObject getMeta();
+
+	void setMeta(JsonObject metaData);
 }
