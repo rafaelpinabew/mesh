@@ -295,6 +295,20 @@ public class BootstrapInitializerImpl implements BootstrapInitializer {
 					createSearchIndicesAndMappings();
 				}
 			} else {
+				
+				if (new File(options.getStorageOptions().getDirectory()).exists()) {
+					db.setupConnectionPool();
+					boolean isEmptyInstallation = isEmptyInstallation();
+					if (!isEmptyInstallation) {
+						vertx = Vertx.vertx();
+						invokeChangelog();
+						vertx.close();
+						this.vertx = null;
+					}
+					db.closeConnectionPool();
+					db.shutdown();
+				}
+
 				// We need to wait for other nodes and receive the graphdb
 				db.clusterManager().startServer();
 				initVertx(options, isClustered);
@@ -683,7 +697,7 @@ public class BootstrapInitializerImpl implements BootstrapInitializer {
 		DatabaseHelper.init(db);
 
 		// Now run the high level changelog entries
-		highlevelChangelogSystem.apply(meshRoot);
+		//highlevelChangelogSystem.apply(meshRoot);
 
 		log.info("Changelog completed.");
 		cls.setCurrentVersionAndRev();
