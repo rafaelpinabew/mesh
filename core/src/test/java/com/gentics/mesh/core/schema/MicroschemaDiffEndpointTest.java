@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import com.gentics.madl.tx.Tx;
 import com.gentics.mesh.FieldUtil;
-import com.gentics.mesh.core.data.container.impl.MicroschemaContainerImpl;
 import com.gentics.mesh.core.data.schema.MicroschemaContainer;
 import com.gentics.mesh.core.data.schema.MicroschemaContainerVersion;
 import com.gentics.mesh.core.rest.microschema.MicroschemaModel;
@@ -64,6 +63,9 @@ public class MicroschemaDiffEndpointTest extends AbstractMeshTest {
 		return vcardMicroschema;
 	}
 
+	/**
+	 * Verify that not specifying the description in the posted schema (description set to null) will not create a diff.
+	 */
 	@Test
 	public void testDiffEmptyDescription() {
 		// Set the description to empty string
@@ -79,6 +81,28 @@ public class MicroschemaDiffEndpointTest extends AbstractMeshTest {
 		// Diff the schema with no description in the JSON
 		Microschema request = getMicroschema();
 		request.setDescription(null);
+		SchemaChangesListModel changes = call(() -> client().diffMicroschema(microschemaUuid, request));
+		assertThat(changes.getChanges()).isEmpty();
+	}
+
+	/**
+	 * Verify that not specifying the label in the posted schema field (label set to null) will not create a diff.
+	 */
+	@Test
+	public void testDiffEmptyFieldLabel() {
+		// Set the field label to empty string
+		String microschemaUuid = tx(() -> microschemaContainer("vcard").getUuid());
+		tx(() -> {
+			MicroschemaContainer microschema = tx(() -> microschemaContainer("vcard"));
+			MicroschemaContainerVersion microschemaVersion = microschema.getLatestVersion();
+			MicroschemaModel schemaModel = microschemaVersion.getSchema();
+			schemaModel.getField("firstName").setLabel("");
+			microschemaVersion.setJson(schemaModel.toJson());
+		});
+
+		// Diff the schema with no label in the JSON
+		Microschema request = getMicroschema();
+		request.getField("firstName").setLabel(null);
 		SchemaChangesListModel changes = call(() -> client().diffMicroschema(microschemaUuid, request));
 		assertThat(changes.getChanges()).isEmpty();
 	}

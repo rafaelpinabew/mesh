@@ -297,6 +297,71 @@ public class SchemaDiffEndpointTest extends AbstractMeshTest {
 
 	}
 
+	/**
+	 * Verify that not specifying the description in the posted schema (description set to null) will not create a diff.
+	 */
+	@Test
+	public void testDiffEmptyDescription() {
+		// Set the description to empty string
+		String schemaUuid = tx(() -> schemaContainer("content").getUuid());
+		tx(() -> {
+			SchemaContainerVersion version = schemaContainer("content").getLatestVersion();
+			SchemaModel schemaModel = version.getSchema();
+			schemaModel.setDescription("");
+			version.setJson(schemaModel.toJson());
+		});
+
+		// Diff the schema with no description in the JSON
+		Schema request = getSchema();
+		request.setDescription(null);
+		SchemaChangesListModel changes = call(() -> client().diffSchema(schemaUuid, request));
+		assertThat(changes.getChanges()).isEmpty();
+	}
+
+	/**
+	 * Verify that not specifying the label in the posted schema field (label set to null) will not create a diff.
+	 */
+	@Test
+	public void testDiffEmptyFieldLabel() {
+		// Set the field label to empty string
+		String schemaUuid = tx(() -> schemaContainer("content").getUuid());
+		tx(() -> {
+			SchemaContainerVersion version = schemaContainer("content").getLatestVersion();
+			SchemaModel schemaModel = version.getSchema();
+			schemaModel.getField("title").setLabel("");
+			version.setJson(schemaModel.toJson());
+		});
+
+		// Diff the schema with no label in the JSON
+		Schema request = getSchema();
+		request.getField("title").setLabel(null);
+		SchemaChangesListModel changes = call(() -> client().diffSchema(schemaUuid, request));
+		assertThat(changes.getChanges()).isEmpty();
+	}
+
+	/**
+	 * Verify that omitting fields will not create a diff
+	 */
+	@Test
+	public void testDiffOmittedFields() {
+		// Set the field label to empty string
+		String schemaUuid = tx(() -> schemaContainer("content").getUuid());
+		tx(() -> {
+			SchemaContainerVersion version = schemaContainer("content").getLatestVersion();
+			SchemaModel schemaModel = version.getSchema();
+			schemaModel.getField("title").setLabel("");
+			version.setJson(schemaModel.toJson());
+		});
+
+		// Diff the schema with fields in the model
+		Schema request = getSchema();
+		request.setSegmentField(null);
+		request.setDisplayField(null);
+		request.setFields(null);
+		SchemaChangesListModel changes = call(() -> client().diffSchema(schemaUuid, request));
+		assertThat(changes.getChanges()).isEmpty();
+	}
+
 	@Test
 	public void testAddField() {
 		try (Tx tx = tx()) {

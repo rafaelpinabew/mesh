@@ -174,11 +174,17 @@ public abstract class AbstractFieldSchema implements FieldSchema {
 	@Override
 	@JsonIgnore
 	public Map<String, Object> getAllChangeProperties() {
+		String label = getLabel();
 		Map<String, Object> map = new HashMap<>();
-		map.put(LABEL_KEY, getLabel());
+		if (label != null) {
+			map.put(LABEL_KEY, getLabel());
+		}
 		map.put(REQUIRED_KEY, isRequired());
 		// empty object and null/missing should be treated the same
-		map.put(ELASTICSEARCH_KEY, getElasticsearch() == null || getElasticsearch().size() == 0 ? new JsonObject() : getElasticsearch());
+		JsonObject es = getElasticsearch();
+		if (es == null) {
+			map.put(ELASTICSEARCH_KEY, es);
+		}
 		return map;
 	}
 

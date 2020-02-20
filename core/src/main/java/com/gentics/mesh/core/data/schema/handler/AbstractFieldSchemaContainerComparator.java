@@ -188,12 +188,18 @@ public abstract class AbstractFieldSchemaContainerComparator<FC extends FieldSch
 	 * 
 	 * @param changes
 	 * @param key
-	 * @param objectA
-	 * @param objectB
+	 * @param objectA Current field value
+	 * @param objectB New field value
 	 * @param classOfFC
 	 */
 	protected void compareAndAddSchemaProperty(List<SchemaChangeModel> changes, String key, Object objectA, Object objectB,
 			Class<? extends FC> classOfFC) {
+		// Skip comparison for property values which have not been specified
+		// We omit these since our jackson setup will not allow us to 
+		// differentiate between field value not set at all and explicitly set to null.
+		if (objectB == null) {
+			return;
+		}
 		if (!CompareUtils.equals(objectA, objectB)) {
 			SchemaChangeModel change = createFieldContainerUpdateChange(classOfFC);
 			change.getProperties().put(key, objectB);
