@@ -5,10 +5,14 @@ import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_JOINED;
 import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_JOINING;
 import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_LEFT;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import com.gentics.mesh.cli.BootstrapInitializer;
+import com.gentics.mesh.core.verticle.handler.HandlerUtilities;
 import com.orientechnologies.orient.server.distributed.ODistributedLifecycleListener;
 import com.orientechnologies.orient.server.distributed.ODistributedServerManager.DB_STATUS;
 
@@ -32,12 +36,17 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	private final Lazy<BootstrapInitializer> boot;
 
+	private Map<String, DB_STATUS> statusMap = new HashMap<>();
+
 	private CountDownLatch nodeJoinLatch = new CountDownLatch(1);
 
-	public TopologyEventBridge(Lazy<Vertx> vertx, Lazy<BootstrapInitializer> boot, OrientDBClusterManager manager) {
+	private Lazy<HandlerUtilities> handlerUtilities;
+
+	public TopologyEventBridge(Lazy<Vertx> vertx, Lazy<BootstrapInitializer> boot, OrientDBClusterManager manager, Lazy<HandlerUtilities> handlerUtilities) {
 		this.vertx = vertx;
 		this.boot = boot;
 		this.manager = manager;
+		this.handlerUtilities = handlerUtilities;
 	}
 
 	EventBus getEventBus() {
@@ -70,6 +79,7 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 		if (log.isDebugEnabled()) {
 			log.debug("Node {" + iNode + "} left the cluster");
 		}
+		statusMap.remove(iNode);
 		// db.removeNode(iNode);
 		if (isVertxReady()) {
 			getEventBus().publish(CLUSTER_NODE_LEFT.address, iNode);
@@ -79,6 +89,8 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 	@Override
 	public void onDatabaseChangeStatus(String iNode, String iDatabaseName, DB_STATUS iNewStatus) {
 		log.info("Node {" + iNode + "} Database {" + iDatabaseName + "} changed status {" + iNewStatus.name() + "}");
+		statusMap.put(iNode, iNewStatus);
+
 		if (isVertxReady()) {
 			JsonObject statusInfo = new JsonObject();
 			statusInfo.put("node", iNode);
@@ -108,6 +120,29 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	public boolean isVertxReady() {
 		return boot.get().isVertxReady();
+	}
+
+	public Map<String, DB_STATUS> getStatusMap() {
+		return statusMap;
+	}
+
+	/**
+	 * Check whether any instance in the cluster is in a blocking state (e.g. BACKUP, SYNCHRONIZING).
+	 * 
+	 * @return
+	 */
+	public boolean hasBlockingState() {
+		for (Entry<String, DB_STATUS> entry : getStatusMap().entrySet()) {
+			DB_STATUS status = entry.getValue();
+			switch (status) {
+			case BACKUP:
+			case SYNCHRONIZING:
+				return true;
+			default:
+				continue;
+			}
+		}
+		return false;
 	}
 
 }

@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import com.gentics.mesh.cli.BootstrapInitializer;
 import com.gentics.mesh.core.rest.admin.cluster.ClusterInstanceInfo;
 import com.gentics.mesh.core.rest.admin.cluster.ClusterStatusResponse;
+import com.gentics.mesh.core.verticle.handler.HandlerUtilities;
 import com.gentics.mesh.etc.config.ClusterOptions;
 import com.gentics.mesh.etc.config.GraphStorageOptions;
 import com.gentics.mesh.etc.config.MeshOptions;
@@ -79,12 +80,16 @@ public class OrientDBClusterManager implements ClusterManager {
 
 	private final Lazy<BootstrapInitializer> boot;
 
+	private Lazy<HandlerUtilities> handlerUtilities;
+
 	@Inject
-	public OrientDBClusterManager(Lazy<Vertx> vertx, Lazy<BootstrapInitializer> boot, MeshOptions options, Lazy<OrientDBDatabase> db) {
+	public OrientDBClusterManager(Lazy<Vertx> vertx, Lazy<BootstrapInitializer> boot, MeshOptions options, Lazy<OrientDBDatabase> db,
+		Lazy<HandlerUtilities> handlerUtilities) {
 		this.vertx = vertx;
 		this.boot = boot;
 		this.options = options;
 		this.db = db;
+		this.handlerUtilities = handlerUtilities;
 	}
 
 	/**
@@ -377,7 +382,7 @@ public class OrientDBClusterManager implements ClusterManager {
 		server.activate();
 		if (isClusteringEnabled) {
 			ODistributedServerManager distributedManager = server.getDistributedManager();
-			topologyEventBridge = new TopologyEventBridge(vertx, boot, this);
+			topologyEventBridge = new TopologyEventBridge(vertx, boot, this, handlerUtilities);
 			distributedManager.registerLifecycleListener(topologyEventBridge);
 			if (server.getDistributedManager() instanceof OHazelcastPlugin) {
 				hazelcastPlugin = (OHazelcastPlugin) distributedManager;
@@ -422,6 +427,13 @@ public class OrientDBClusterManager implements ClusterManager {
 	 */
 	public GraphStorageOptions storageOptions() {
 		return options.getStorageOptions();
+	}
+
+	public boolean hasBlockingState() {
+		if (topologyEventBridge == null) {
+			return false;
+		}
+		return topologyEventBridge.hasBlockingState();
 	}
 
 	// /**

@@ -491,4 +491,7 @@ public interface Database extends TxFactory {
 	List<String> getChangeUuidList();
 
 	Vertx vertx();
+
+	boolean hasBlockingState();
+
 }

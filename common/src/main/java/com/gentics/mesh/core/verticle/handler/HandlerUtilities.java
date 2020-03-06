@@ -64,7 +64,8 @@ public class HandlerUtilities {
 	private final Provider<BulkActionContext> bulkProvider;
 
 	@Inject
-	public HandlerUtilities(Database database, MeshOptions meshOptions, MetricsService metrics, Provider<EventQueueBatch> queueProvider, Provider<BulkActionContext> bulkProvider) {
+	public HandlerUtilities(Database database, MeshOptions meshOptions, MetricsService metrics, Provider<EventQueueBatch> queueProvider,
+		Provider<BulkActionContext> bulkProvider) {
 		GraphStorageOptions storageOptions = meshOptions.getStorageOptions();
 		this.database = database;
 		this.metrics = metrics;
@@ -343,11 +344,23 @@ public class HandlerUtilities {
 		return tuple.v1();
 	}
 
-
 	/**
 	 * Locks writes. Use this to prevent concurrent write transactions.
 	 */
 	public void lock() {
+		long start = System.currentTimeMillis();
+		while (database.hasBlockingState()) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			// Check time limit
+			long now = System.currentTimeMillis();
+			if (now - start >= 40 * 1000) {
+				break;
+			}
+		}
 		if (syncWrites) {
 			try {
 				writeLock.acquire();

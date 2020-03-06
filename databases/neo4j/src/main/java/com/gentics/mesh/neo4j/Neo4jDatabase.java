@@ -3,6 +3,7 @@ package com.gentics.mesh.neo4j;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -44,7 +45,8 @@ public class Neo4jDatabase extends AbstractDatabase {
 	private TypeResolver resolver;
 
 	@Inject
-	public Neo4jDatabase(Lazy<Vertx> vertx, MetricsService metrics, Neo4jTypeHandler typeHandler, Neo4jIndexHandler indexHandler, Neo4jClusterManager clusterManager) {
+	public Neo4jDatabase(Lazy<Vertx> vertx, MetricsService metrics, Neo4jTypeHandler typeHandler, Neo4jIndexHandler indexHandler,
+		Neo4jClusterManager clusterManager) {
 		super(vertx);
 		this.metrics = metrics;
 		this.typeHandler = typeHandler;
@@ -217,6 +219,10 @@ public class Neo4jDatabase extends AbstractDatabase {
 		} catch (Exception e) {
 			throw new RuntimeException("Transaction error", e);
 		}
+	}
+
+	public boolean hasBlockingState() {
+		return false;
 	}
 
 }

@@ -9,6 +9,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERR
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -456,6 +457,16 @@ public class OrientDBDatabase extends AbstractDatabase {
 	@Override
 	public List<String> getChangeUuidList() {
 		return ChangesList.getList(options).stream().map(c -> c.getUuid()).collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean hasBlockingState() {
+		OrientDBClusterManager manager = clusterManager();
+		if (manager == null) {
+			return false;
+		} else {
+			return clusterManager().hasBlockingState();
+		}
 	}
 
 }
