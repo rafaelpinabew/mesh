@@ -10,21 +10,26 @@ import com.gentics.mesh.etc.config.MeshOptions;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ILock;
 
+import dagger.Lazy;
+
 @Singleton
 public class WriteLockImpl implements WriteLock {
 
-	private final ILock lock;
+	private ILock lock;
 	private final MeshOptions options;
+	private final Lazy<HazelcastInstance> hazelcast;
 
 	@Inject
-	public WriteLockImpl(MeshOptions options, HazelcastInstance hazelcast) {
+	public WriteLockImpl(MeshOptions options, Lazy<HazelcastInstance> hazelcast) {
 		this.options = options;
-		this.lock = hazelcast.getLock(WRITE_LOCK_KEY);
+		this.hazelcast = hazelcast;
 	}
 
 	@Override
 	public void close() {
-		lock.unlock();
+		if (lock != null) {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -38,6 +43,12 @@ public class WriteLockImpl implements WriteLock {
 			boolean syncWrites = options.getStorageOptions().isSynchronizeWrites();
 			if (syncWrites) {
 				try {
+					if (lock == null) {
+						HazelcastInstance hz = hazelcast.get();
+						if (hz != null) {
+							this.lock = hz.getLock(WRITE_LOCK_KEY);
+						}
+					}
 					boolean isTimeout = !lock.tryLock(240, TimeUnit.SECONDS);
 					if (isTimeout) {
 						throw new RuntimeException("Got timeout while waiting for write lock.");
