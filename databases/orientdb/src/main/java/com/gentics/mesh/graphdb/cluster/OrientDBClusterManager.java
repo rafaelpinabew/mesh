@@ -396,6 +396,10 @@ public class OrientDBClusterManager implements ClusterManager {
 				// The registerLifecycleListener may not have been invoked. We need to redirect the online event manually.
 				postStartupDBEventHandling();
 			}
+			// TODO wait for the db. Only wait when we are not in init mode..
+			if (!options.isInitClusterMode()) {
+				joinCluster();
+			}
 		} finally {
 			lock.unlock();
 		}
