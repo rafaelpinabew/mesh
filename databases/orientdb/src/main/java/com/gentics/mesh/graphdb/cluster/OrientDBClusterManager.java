@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import com.gentics.mesh.cli.BootstrapInitializer;
 import com.gentics.mesh.core.rest.admin.cluster.ClusterInstanceInfo;
 import com.gentics.mesh.core.rest.admin.cluster.ClusterStatusResponse;
+import com.gentics.mesh.core.verticle.handler.WriteLock;
 import com.gentics.mesh.etc.config.ClusterOptions;
 import com.gentics.mesh.etc.config.GraphStorageOptions;
 import com.gentics.mesh.etc.config.MeshOptions;
@@ -33,6 +34,7 @@ import com.gentics.mesh.graphdb.OrientDBDatabase;
 import com.gentics.mesh.util.DateUtils;
 import com.gentics.mesh.util.PropertyUtil;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ILock;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
@@ -380,13 +382,22 @@ public class OrientDBClusterManager implements ClusterManager {
 			if (server.getDistributedManager() instanceof OHazelcastPlugin) {
 				hazelcastPlugin = (OHazelcastPlugin) distributedManager;
 			}
+
 			topologyEventBridge = new TopologyEventBridge(options, vertx, boot, this, getHazelcast());
 			distributedManager.registerLifecycleListener(topologyEventBridge);
 		}
-		manager.startup();
-		if (isClusteringEnabled) {
-			// The registerLifecycleListener may not have been invoked. We need to redirect the online event manually.
-			postStartupDBEventHandling();
+
+		// We unfortunately can't directly inject the write lock due to a dependency cycle issue.
+		ILock lock = getHazelcast().getLock(WriteLock.WRITE_LOCK_KEY);
+		try {
+			lock.lock();
+			manager.startup();
+			if (isClusteringEnabled) {
+				// The registerLifecycleListener may not have been invoked. We need to redirect the online event manually.
+				postStartupDBEventHandling();
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 

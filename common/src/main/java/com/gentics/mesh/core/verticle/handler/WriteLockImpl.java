@@ -1,6 +1,5 @@
 package com.gentics.mesh.core.verticle.handler;
 
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -8,24 +7,24 @@ import javax.inject.Singleton;
 
 import com.gentics.mesh.context.InternalActionContext;
 import com.gentics.mesh.etc.config.MeshOptions;
-import com.gentics.mesh.graphdb.spi.Database;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ILock;
 
 @Singleton
 public class WriteLockImpl implements WriteLock {
 
-	private final Semaphore lock = new Semaphore(1);
-	private final Database database;
+	private final ILock lock;
 	private final MeshOptions options;
 
 	@Inject
-	public WriteLockImpl(MeshOptions options, Database database) {
+	public WriteLockImpl(MeshOptions options, HazelcastInstance hazelcast) {
 		this.options = options;
-		this.database = database;
+		this.lock = hazelcast.getLock(WRITE_LOCK_KEY);
 	}
 
 	@Override
 	public void close() {
-		lock.release();
+		lock.unlock();
 	}
 
 	/**
@@ -33,14 +32,13 @@ public class WriteLockImpl implements WriteLock {
 	 */
 	@Override
 	public WriteLock lock(InternalActionContext ac) {
-		if (ac.isSkipWriteLock()) {
+		if (ac != null && ac.isSkipWriteLock()) {
 			return this;
 		} else {
 			boolean syncWrites = options.getStorageOptions().isSynchronizeWrites();
-			database.blockingTopologyLockCheck();
 			if (syncWrites) {
 				try {
-					boolean isTimeout = !lock.tryAcquire(60, TimeUnit.SECONDS);
+					boolean isTimeout = !lock.tryLock(240, TimeUnit.SECONDS);
 					if (isTimeout) {
 						throw new RuntimeException("Got timeout while waiting for write lock.");
 					}
