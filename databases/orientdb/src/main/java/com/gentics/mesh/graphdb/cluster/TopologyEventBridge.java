@@ -5,8 +5,6 @@ import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_JOINED;
 import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_JOINING;
 import static com.gentics.mesh.core.rest.MeshEvent.CLUSTER_NODE_LEFT;
 
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -41,9 +39,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	private final Lazy<BootstrapInitializer> boot;
 
-	private Map<String, DB_STATUS> databaseStatusMap;
-	private Map<String, SERVER_STATUS> serverStatusMap;
-
 	private CountDownLatch nodeJoinLatch = new CountDownLatch(1);
 
 	private ClusterOptions clusterOptions;
@@ -54,8 +49,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 		this.vertx = vertx;
 		this.boot = boot;
 		this.manager = manager;
-		this.databaseStatusMap = hz.getMap(DB_STATUS_MAP_KEY);
-		this.serverStatusMap = hz.getMap(SERVER_STATUS_MAP_KEY);
 	}
 
 	EventBus getEventBus() {
@@ -64,12 +57,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	@Override
 	public boolean onNodeJoining(String nodeName) {
-		serverStatusMap.put(nodeName, SERVER_STATUS.JOINING);
-		// Set the db into sync as well since we want to prevent
-		// the lock from being released in between db status changes
-		// and server online status.
-		databaseStatusMap.put(nodeName, DB_STATUS.SYNCHRONIZING);
-
 		if (log.isDebugEnabled()) {
 			log.debug("Node {" + nodeName + "} is joining the cluster.");
 		}
@@ -81,7 +68,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	@Override
 	public void onNodeJoined(String nodeName) {
-		serverStatusMap.put(nodeName, SERVER_STATUS.JOINED);
 		if (log.isDebugEnabled()) {
 			log.debug("Node {" + nodeName + "} joined the cluster.");
 		}
@@ -92,9 +78,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	@Override
 	public void onNodeLeft(String nodeName) {
-		serverStatusMap.remove(nodeName);
-		databaseStatusMap.remove(nodeName);
-
 		if (log.isDebugEnabled()) {
 			log.debug("Node {" + nodeName + "} left the cluster");
 		}
@@ -117,7 +100,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 				}
 			}
 		}
-		databaseStatusMap.put(nodeName, iNewStatus);
 		log.info("Node {" + nodeName + "} Database {" + iDatabaseName + "} changed status {" + iNewStatus.name() + "}");
 		if (isVertxReady()) {
 			JsonObject statusInfo = new JsonObject();
@@ -148,46 +130,6 @@ public class TopologyEventBridge implements ODistributedLifecycleListener {
 
 	public boolean isVertxReady() {
 		return boot.get().isVertxReady();
-	}
-
-	/**
-	 * Check whether a topology change in the database / cluster setup is requiring a lock.
-	 * 
-	 * @return
-	 */
-	public boolean isClusterTopologyLocked() {
-		for (Entry<String, DB_STATUS> entry : databaseStatusMap.entrySet()) {
-			DB_STATUS status = entry.getValue();
-			if (log.isDebugEnabled()) {
-				log.debug("Database: " + entry.getKey() + " = " + entry.getValue().name());
-			}
-			switch (status) {
-			case BACKUP:
-			case SYNCHRONIZING:
-				if (log.isDebugEnabled()) {
-					log.debug("Locking since " + entry.getKey() + " is in status " + entry.getValue());
-				}
-				return true;
-			default:
-				continue;
-			}
-		}
-		for (Entry<String, SERVER_STATUS> entry : serverStatusMap.entrySet()) {
-			SERVER_STATUS status = entry.getValue();
-			if (log.isDebugEnabled()) {
-				log.debug("Server: " + entry.getKey() + " = " + entry.getValue().name());
-			}
-			switch (status) {
-			case JOINING:
-				if (log.isDebugEnabled()) {
-					log.debug("Locking since " + entry.getKey() + " is joining.");
-				}
-				return true;
-			default:
-				continue;
-			}
-		}
-		return false;
 	}
 
 }

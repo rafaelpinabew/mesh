@@ -278,7 +278,6 @@ public class HandlerUtilities {
 		BulkActionContext b = database.tx(tx -> {
 			BulkActionContext bac = bulkProvider.get();
 			function.accept(bac);
-			database.blockingTopologyLockCheck();
 			return bac;
 		});
 		b.process(true);
@@ -294,7 +293,6 @@ public class HandlerUtilities {
 		Tuple<T, BulkActionContext> r = database.tx(tx -> {
 			BulkActionContext bac = bulkProvider.get();
 			T result = function.apply(bac);
-			database.blockingTopologyLockCheck();
 			return Tuple.tuple(result, bac);
 		});
 		r.v2().process(true);
@@ -310,7 +308,6 @@ public class HandlerUtilities {
 		EventQueueBatch b = database.tx(tx -> {
 			EventQueueBatch batch = queueProvider.get();
 			function.accept(batch);
-			database.blockingTopologyLockCheck();
 			return batch;
 		});
 		b.dispatch();
@@ -325,7 +322,6 @@ public class HandlerUtilities {
 	public <T> T eventAction(Function<EventQueueBatch, T> function) {
 		return eventAction((tx, batch) -> {
 			T result = function.apply(batch);
-			database.blockingTopologyLockCheck();
 			return result;
 		});
 	}
@@ -340,7 +336,6 @@ public class HandlerUtilities {
 		Tuple<T, EventQueueBatch> tuple = database.tx(tx -> {
 			EventQueueBatch batch = queueProvider.get();
 			T result = function.apply(tx, batch);
-			database.blockingTopologyLockCheck();
 			return Tuple.tuple(result, batch);
 		});
 		tuple.v2().dispatch();

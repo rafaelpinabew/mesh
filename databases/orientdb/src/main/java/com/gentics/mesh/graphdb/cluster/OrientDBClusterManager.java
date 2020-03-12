@@ -450,16 +450,4 @@ public class OrientDBClusterManager implements ClusterManager {
 		return hazelcastPlugin;
 	}
 
-	/**
-	 * @see TopologyEventBridge#isClusterTopologyLocked()
-	 * @return
-	 */
-	public boolean isClusterTopologyLocked() {
-		if (topologyEventBridge == null) {
-			return false;
-		} else {
-			return topologyEventBridge.isClusterTopologyLocked();
-		}
-	}
-
 }

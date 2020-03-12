@@ -509,11 +509,6 @@ public interface Database extends TxFactory {
 	ClusterConfigResponse loadClusterConfig();
 
 	/**
-	 * Check whether a topology change causes a lock.
-	 */
-	void blockingTopologyLockCheck();
-
-	/**
 	 * Set the server role to master.
 	 */
 	void setToMaster();

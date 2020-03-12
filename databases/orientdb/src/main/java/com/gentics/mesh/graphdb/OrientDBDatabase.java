@@ -27,7 +27,6 @@ import com.gentics.mesh.core.rest.admin.cluster.ClusterConfigResponse;
 import com.gentics.mesh.core.rest.admin.cluster.ClusterServerConfig;
 import com.gentics.mesh.core.rest.admin.cluster.ServerRole;
 import com.gentics.mesh.core.rest.error.GenericRestException;
-import com.gentics.mesh.etc.config.ClusterOptions;
 import com.gentics.mesh.etc.config.GraphStorageOptions;
 import com.gentics.mesh.etc.config.MeshOptions;
 import com.gentics.mesh.graphdb.cluster.OrientDBClusterManager;
@@ -337,33 +336,6 @@ public class OrientDBDatabase extends AbstractDatabase {
 	@Deprecated
 	public Tx tx() {
 		return new OrientDBTx(boot.get(), txProvider, resolver);
-	}
-
-	@Override
-	public void blockingTopologyLockCheck() {
-		ClusterOptions clusterOptions = options.getClusterOptions();
-		long lockTimeout = clusterOptions.getTopologyLockTimeout();
-		if (clusterOptions.isEnabled() && clusterManager() != null && lockTimeout != 0) {
-			long start = System.currentTimeMillis();
-			long i = 0;
-			while (clusterManager().isClusterTopologyLocked()) {
-				long dur = System.currentTimeMillis() - start;
-				if (i % 250 == 0) {
-					log.info("Write operation locked due to topology lock. Locked since " + dur + "ms");
-				}
-				if (dur > lockTimeout) {
-					log.warn("Tx global lock timeout of {" + lockTimeout + "} reached.");
-					break;
-				}
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					log.error("Interrupting topology lock delay.", e);
-					break;
-				}
-				i++;
-			}
-		}
 	}
 
 	@Override
